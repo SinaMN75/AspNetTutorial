@@ -1,0 +1,18 @@
+      SELECT u."FullName", u."Email", u."PhoneNumber", u."Id", s."Id", s."Title", s."Subject", s."ClassesId", s."UsersId"
+      FROM "Users" AS u
+      LEFT JOIN (
+          SELECT c0."Id", c0."Title", c0."Subject", c."ClassesId", c."UsersId"
+          FROM "ClassEntityUserEntity" AS c
+          INNER JOIN "Classes" AS c0 ON c."ClassesId" = c0."Id"
+      ) AS s ON u."Id" = s."UsersId"
+      ORDER BY u."Id", s."ClassesId", s."UsersId"
+
+      SELECT u."Id", u."Birthdate", u."Email", u."FullName", u."IsMarried", u."Password", u."PhoneNumber", s."Id", s."SchoolId", s."Subject", s."Title", s."ClassesId", s."UsersId"
+      FROM "Users" AS u
+      LEFT JOIN (
+          SELECT c0."Id", c0."SchoolId", c0."Subject", c0."Title", c."ClassesId", c."UsersId"
+          FROM "ClassEntityUserEntity" AS c
+          INNER JOIN "Classes" AS c0 ON c."ClassesId" = c0."Id"
+      ) AS s ON u."Id" = s."UsersId"
+      ORDER BY u."Id", s."ClassesId", s."UsersId"
+

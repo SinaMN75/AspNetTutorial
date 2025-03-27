@@ -41,7 +41,10 @@ builder.Services.AddSwaggerGen(c => {
 });
 
 builder.Services.AddScoped<AppDbContext>();
-builder.Services.AddDbContextPool<AppDbContext>(o => { o.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDatabase")); });
+builder.Services.AddDbContextPool<AppDbContext>(o => {
+	o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+	o.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDatabase"));
+});
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IClassService, ClassService>();

@@ -3,6 +3,7 @@ using System;
 using AspNetTutorial;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AspNetTutorial.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250327121520_addIndex")]
+    partial class addIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,34 +123,6 @@ namespace AspNetTutorial.Migrations
                         .HasForeignKey("SchoolId");
 
                     b.Navigation("School");
-                });
-
-            modelBuilder.Entity("AspNetTutorial.Entities.UserEntity", b =>
-                {
-                    b.OwnsOne("AspNetTutorial.Entities.UserJsonDetail", "JsonDetail", b1 =>
-                        {
-                            b1.Property<Guid>("UserEntityId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("FatherName")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<int>("Point")
-                                .HasColumnType("integer");
-
-                            b1.HasKey("UserEntityId");
-
-                            b1.ToTable("Users");
-
-                            b1.ToJson("JsonDetail");
-
-                            b1.WithOwner()
-                                .HasForeignKey("UserEntityId");
-                        });
-
-                    b.Navigation("JsonDetail")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("ClassEntityUserEntity", b =>

@@ -38,7 +38,8 @@ public class AuthService(AppDbContext dbContext, IUserService userService) : IAu
 			PhoneNumber = dto.PhoneNumber,
 			Birthdate = dto.Birthdate,
 			IsMarried = dto.IsMarried,
-			Password = "123456789"
+			Password = "123456789",
+			JsonDetail = new UserJsonDetail()
 		};
 		UserEntity entity = dbContext.Users.Add(user).Entity;
 		await dbContext.SaveChangesAsync();

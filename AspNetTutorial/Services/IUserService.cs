@@ -5,17 +5,32 @@ using Entities;
 using Microsoft.EntityFrameworkCore;
 
 public interface IUserService {
-	Task<IEnumerable<UserResponse>> Read();
-	Task<BaseResponse<UserResponse?>> ReadById(Guid i);
-	Task<UserResponse?> Update(UserUpdateParams param);
-	Task Delete(Guid id);
-	Task<UserResponse> Create(UserCreateParams user);
-
-	Task<UserResponse?>? GetProfile();
+	Task<IEnumerable<UserResponse>> Read(CancellationToken ct);
+	Task<BaseResponse<UserResponse?>> ReadById(Guid i, CancellationToken ct);
+	Task<UserResponse?> Update(UserUpdateParams param, CancellationToken ct);
+	Task Delete(Guid id, CancellationToken ct);
+	Task<UserResponse> Create(UserCreateParams user, CancellationToken ct);
+	Task<UserResponse?>? GetProfile(CancellationToken ct);
 }
 
 public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContext) : IUserService {
-	public async Task<IEnumerable<UserResponse>> Read() {
+	public async Task<IEnumerable<UserResponse>> Read(CancellationToken ct) {
+		// IEnumerable<UserEntity> list =
+		// 	await dbContext.Users.Select(x => new UserEntity {
+		// 		FullName = x.FullName,
+		// 		Email = x.Email,
+		// 		PhoneNumber = x.PhoneNumber,
+		// 		Password = "",
+		// 		Classes = x.Classes.Select(c => new ClassEntity {
+		// 			Id = c.Id,
+		// 			Title = c.Title,
+		// 			Subject = c.Subject
+		// 		})
+		// 	}).ToListAsync();
+
+		// IEnumerable<UserEntity> list = await dbContext.Users.Include(x => x.Classes).ToListAsync();
+
+
 		List<UserResponse> list = await dbContext.Users.Select(x => new UserResponse {
 			Id = x.Id,
 			FullName = x.FullName,
@@ -25,13 +40,13 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 			IsMarried = x.IsMarried,
 			Age = 7,
 			Classes = x.Classes.ToList()
-		}).ToListAsync();
+		}).OrderBy(x => x.PhoneNumber).ToListAsync(ct);
 
-		return list;
+		return new List<UserResponse>();
 	}
-	
-	public async Task<BaseResponse<UserResponse?>> ReadById(Guid id) {
-		UserEntity? user = await dbContext.Users.FindAsync(id);
+
+	public async Task<BaseResponse<UserResponse?>> ReadById(Guid id, CancellationToken ct) {
+		UserEntity? user = await dbContext.Users.FindAsync(id, ct);
 		if (user == null) {
 			return new BaseResponse<UserResponse?>(null, 404, "User not found");
 		}
@@ -54,8 +69,12 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 		return new BaseResponse<UserResponse?>(response);
 	}
 
-	public async Task<UserResponse?> Update(UserUpdateParams param) {
-		UserEntity? user = await dbContext.Users.FindAsync(param.Id);
+	public async Task<UserResponse?> Update(UserUpdateParams param, CancellationToken ct) {
+		// int count = await dbContext.Users.Where(x => x.Id == param.Id).ExecuteUpdateAsync(x =>
+		// x.SetProperty(x => x.Email, param.Email)
+		// .SetProperty(x => x.Birthdate, param.Birthdate));
+
+		UserEntity? user = await dbContext.Users.Include(x => x.Classes).FirstOrDefaultAsync(x => x.Id == param.Id, ct);
 		if (user == null) return null;
 		if (param.IsMarried != null) user.IsMarried = param.IsMarried.Value;
 		if (param.PhoneNumber != null) user.PhoneNumber = param.PhoneNumber;
@@ -64,7 +83,7 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 		if (param.Email != null) user.Email = param.Email;
 
 		dbContext.Users.Update(user);
-		await dbContext.SaveChangesAsync();
+		await dbContext.SaveChangesAsync(ct);
 		return new UserResponse {
 			Id = user.Id,
 			FullName = user.FullName,
@@ -76,14 +95,16 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 		};
 	}
 
-	public async Task Delete(Guid id) {
+	public async Task Delete(Guid id, CancellationToken ct) {
+		// int count = await dbContext.Users.Where(x => x.Id == id).ExecuteDeleteAsync();
+
 		UserEntity? user = await dbContext.Users.FindAsync(id);
 		if (user == null) return;
 		dbContext.Users.Remove(user);
-		await dbContext.SaveChangesAsync();
+		await dbContext.SaveChangesAsync(ct);
 	}
 
-	public async Task<UserResponse> Create(UserCreateParams dto) {
+	public async Task<UserResponse> Create(UserCreateParams dto, CancellationToken ct) {
 		UserEntity user = new() {
 			Id = Guid.CreateVersion7(),
 			FullName = dto.FullName,
@@ -91,10 +112,11 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 			PhoneNumber = dto.PhoneNumber,
 			Birthdate = dto.Birthdate,
 			IsMarried = dto.IsMarried,
-			Password = "123456789"
+			Password = "123456789",
+			JsonDetail = new UserJsonDetail()
 		};
 		UserEntity entity = dbContext.Users.Add(user).Entity;
-		await dbContext.SaveChangesAsync();
+		await dbContext.SaveChangesAsync(ct);
 
 		int? age = null;
 		if (entity.Birthdate != null) {
@@ -112,10 +134,10 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 		};
 	}
 
-	public async Task<UserResponse?>? GetProfile() {
+	public async Task<UserResponse?>? GetProfile(CancellationToken ct) {
 		string? userId = httpContext.HttpContext.User.Identity.Name;
 		if (userId == null) return null;
-		BaseResponse<UserResponse?> user = await ReadById(Guid.Parse(userId));
+		BaseResponse<UserResponse?> user = await ReadById(Guid.Parse(userId), ct);
 		return user.Result ?? null;
 	}
 }

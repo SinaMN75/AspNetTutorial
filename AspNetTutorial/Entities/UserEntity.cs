@@ -1,9 +1,11 @@
 namespace AspNetTutorial.Entities;
 
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 [Table("Users")]
+[Index(nameof(PhoneNumber), Name = "IX_Users_PhoneNumber")]
 public class UserEntity {
 	[Key]
 	public Guid Id { get; set; }
@@ -27,6 +29,13 @@ public class UserEntity {
 
 	public bool IsMarried { get; set; } = false;
 
+	public required UserJsonDetail JsonDetail { get; set; } = new();
 
-	public List<ClassEntity> Classes { get; set; }
+
+	public IEnumerable<ClassEntity> Classes { get; set; }
+}
+
+public class UserJsonDetail {
+	public string FatherName { get; set; }
+	public int Point { get; set; }
 }
