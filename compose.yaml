@@ -1,0 +1,6 @@
+﻿services:
+  aspnettutorial:
+    image: aspnettutorial
+    build:
+      context: .
+      dockerfile: AspNetTutorial/Dockerfile

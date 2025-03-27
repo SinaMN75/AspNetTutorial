@@ -1,11 +1,13 @@
 using AspNetTutorial;
 using AspNetTutorial.Dtos;
 using AspNetTutorial.Entities;
+using AspNetTutorial.Routes;
 using AspNetTutorial.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -20,6 +22,7 @@ builder.Services.ConfigureHttpJsonOptions(options => {
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
 	c.UseInlineDefinitionsForEnums();
@@ -72,102 +75,16 @@ WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment()) {
 	app.UseSwagger();
 	app.UseSwaggerUI();
+	app.MapOpenApi();
+	app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
 
-app.MapPost("user/Create", async (IUserService userService, UserCreateParams dto) => {
-	UserResponse result = await userService.Create(dto);
-	return Results.Ok(result);
-});
+app.MapUserRoutes("User");
+app.MapClassRoutes("Class");
+app.MapSchoolRoutes("School");
+app.MapAuthRoutes("Auth");
 
-app.MapGet("user/Read", async (IUserService userService) => {
-	IEnumerable<UserResponse> result = await userService.Read();
-	return Results.Ok(result);
-});
-
-app.MapGet("user/Read/{id:guid}", async (IUserService userService, Guid id) => {
-	UserResponse? result = await userService.ReadById(id);
-	return result == null ? Results.NotFound() : Results.Ok(result);
-});
-
-app.MapPut("user/Update", async (IUserService userService, UserUpdateParams param) => {
-	UserResponse? result = await userService.Update(param);
-	return result == null ? Results.NotFound() : Results.Ok(result);
-});
-
-app.MapDelete("user/Delete", async (IUserService userService, Guid id) => {
-	await userService.Delete(id);
-	return Results.Ok();
-});
-
-
-app.MapPost("class/Create", async (IClassService service, ClassCreateDto dto) => {
-	ClassEntity result = await service.Create(dto);
-	return Results.Ok(result);
-});
-
-app.MapGet("class/Read", async (IClassService service) => {
-	IEnumerable<ClassEntity> result = await service.Read();
-	return Results.Ok(result);
-});
-
-app.MapGet("class/Read/{id:guid}", async (IClassService service, Guid id) => {
-	ClassEntity? result = await service.ReadById(id);
-	return result == null ? Results.NotFound() : Results.Ok(result);
-});
-
-app.MapPut("class/Update", async (IClassService service, ClassEntity param) => {
-	ClassEntity? result = await service.Update(param);
-	return result == null ? Results.NotFound() : Results.Ok(result);
-});
-
-app.MapDelete("class/Delete", async (IClassService service, Guid id) => {
-	await service.Delete(id);
-	return Results.Ok();
-});
-
-
-app.MapPost("School/Create", async (ISchoolService service, SchoolEntity dto) => {
-	SchoolEntity result = await service.Create(dto);
-	return Results.Ok(result);
-});
-
-app.MapGet("School/Read", async (ISchoolService service) => {
-	IEnumerable<SchoolEntity> result = await service.Read();
-	return Results.Ok(result);
-});
-
-app.MapGet("School/Read/{id:guid}", async (ISchoolService service, Guid id) => {
-	SchoolEntity? result = await service.ReadById(id);
-	return result == null ? Results.NotFound() : Results.Ok(result);
-});
-
-app.MapPut("School/Update", async (ISchoolService service, SchoolEntity param) => {
-	SchoolEntity? result = await service.Update(param);
-	return result == null ? Results.NotFound() : Results.Ok(result);
-});
-
-app.MapDelete("School/Delete", async (ISchoolService service, Guid id) => {
-	await service.Delete(id);
-	return Results.Ok();
-});
-
-
-app.MapPost("auth/login", async (LoginParams p, IAuthService service) => {
-	LoginResponse? result = await service.Login(p);
-	return result == null ? Results.Unauthorized() : Results.Ok(result);
-});
-
-
-app.MapPost("auth/Register", async (IAuthService authService, UserCreateParams dto) => {
-	UserResponse result = await authService.Register(dto);
-	return Results.Ok(result);
-});
-
-app.MapGet("user/getProfile", async (IUserService service) => {
-	UserResponse? result = await service.GetProfile();
-	return result == null ? Results.Unauthorized() : Results.Ok(result);
-}).RequireAuthorization();
 
 app.Run();

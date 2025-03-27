@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 public interface IUserService {
 	Task<IEnumerable<UserResponse>> Read();
-	Task<UserResponse?> ReadById(Guid i);
+	Task<BaseResponse<UserResponse?>> ReadById(Guid i);
 	Task<UserResponse?> Update(UserUpdateParams param);
 	Task Delete(Guid id);
 	Task<UserResponse> Create(UserCreateParams user);
@@ -29,11 +29,11 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 
 		return list;
 	}
-
-	public async Task<UserResponse?> ReadById(Guid id) {
+	
+	public async Task<BaseResponse<UserResponse?>> ReadById(Guid id) {
 		UserEntity? user = await dbContext.Users.FindAsync(id);
 		if (user == null) {
-			return null;
+			return new BaseResponse<UserResponse?>(null, 404, "User not found");
 		}
 
 		int? age = null;
@@ -51,7 +51,7 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 			Age = 7
 		};
 
-		return response;
+		return new BaseResponse<UserResponse?>(response);
 	}
 
 	public async Task<UserResponse?> Update(UserUpdateParams param) {
@@ -115,7 +115,7 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 	public async Task<UserResponse?>? GetProfile() {
 		string? userId = httpContext.HttpContext.User.Identity.Name;
 		if (userId == null) return null;
-		UserResponse? user = await ReadById(Guid.Parse(userId));
-		return user ?? null;
+		BaseResponse<UserResponse?> user = await ReadById(Guid.Parse(userId));
+		return user.Result ?? null;
 	}
 }
