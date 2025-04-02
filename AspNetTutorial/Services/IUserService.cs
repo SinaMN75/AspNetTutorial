@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 public interface IUserService {
 	Task<IEnumerable<UserResponse>> Read(CancellationToken ct);
+	Task<IEnumerable<UserEntity>> Filter(UserFilterParams param, CancellationToken ct);
 	Task<BaseResponse<UserResponse?>> ReadById(Guid i, CancellationToken ct);
 	Task<UserResponse?> Update(UserUpdateParams param, CancellationToken ct);
 	Task Delete(Guid id, CancellationToken ct);
@@ -43,6 +44,16 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 		}).OrderBy(x => x.PhoneNumber).ToListAsync(ct);
 
 		return new List<UserResponse>();
+	}
+
+	public async Task<IEnumerable<UserEntity>> Filter(UserFilterParams p, CancellationToken ct) {
+		IQueryable<UserEntity> q = dbContext.Users;
+		if (!string.IsNullOrWhiteSpace(p.Email)) q = q.Where(x => x.Email.Contains(p.Email));
+		if (!string.IsNullOrWhiteSpace(p.FatherName)) q = q.Where(x => x.JsonDetail.FatherName.Contains(p.FatherName));
+		if (p.Point != null) q = q.Where(x => x.JsonDetail.Point == p.Point);
+		if (p.Tags != null) q = q.Where(x => x.Tags.Any(tag => p.Tags.Contains(tag)));
+		
+		return await q.ToListAsync();
 	}
 
 	public async Task<BaseResponse<UserResponse?>> ReadById(Guid id, CancellationToken ct) {
@@ -113,7 +124,11 @@ public class UserService(AppDbContext dbContext, IHttpContextAccessor httpContex
 			Birthdate = dto.Birthdate,
 			IsMarried = dto.IsMarried,
 			Password = "123456789",
-			JsonDetail = new UserJsonDetail()
+			Tags = dto.Tags,
+			JsonDetail = new UserJsonDetail {
+				FatherName = dto.FatherName ?? "",
+				Point = dto.Point ?? 0
+			}
 		};
 		UserEntity entity = dbContext.Users.Add(user).Entity;
 		await dbContext.SaveChangesAsync(ct);

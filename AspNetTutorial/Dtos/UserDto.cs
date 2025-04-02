@@ -22,6 +22,11 @@ public class UserCreateParams {
 	public bool IsMarried { get; set; } = false;
 
 	public required string Password { get; set; }
+	
+	public string? FatherName { get; set; }
+	public int? Point { get; set; }
+	
+	public required List<UserTags> Tags { get; set; }
 }
 
 public class UserUpdateParams {
@@ -34,6 +39,14 @@ public class UserUpdateParams {
 	public string? PhoneNumber { get; set; }
 	public DateTime? Birthdate { get; set; }
 	public bool? IsMarried { get; set; }
+	public required List<UserTags> Tags { get; set; }
+}
+
+public class UserFilterParams {
+	public string? FatherName { get; set; }
+	public int? Point { get; set; }
+	public string? Email { get; set; }
+	public List<UserTags>? Tags { get; set; }
 }
 
 public class UserResponse {

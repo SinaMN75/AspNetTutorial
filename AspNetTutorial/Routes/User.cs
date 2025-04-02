@@ -1,6 +1,7 @@
 namespace AspNetTutorial.Routes;
 
 using Dtos;
+using Entities;
 using Services;
 
 public static class User {
@@ -34,5 +35,10 @@ public static class User {
 			UserResponse? result = await service.GetProfile(ct);
 			return result == null ? Results.Unauthorized() : Results.Ok(result);
 		}).RequireAuthorization().WithTags(tag);
+
+		app.MapPost("user/filterUsers", async (IUserService service, UserFilterParams p, CancellationToken ct) => {
+			IEnumerable<UserEntity>? result = await service.Filter(p, ct);
+			return Results.Ok(result);
+		}).WithTags(tag);
 	}
 }

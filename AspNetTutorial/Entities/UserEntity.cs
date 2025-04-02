@@ -31,11 +31,18 @@ public class UserEntity {
 
 	public required UserJsonDetail JsonDetail { get; set; } = new();
 
-
+	public required List<UserTags> Tags { get; set; }
+	
 	public IEnumerable<ClassEntity> Classes { get; set; }
 }
 
 public class UserJsonDetail {
 	public string FatherName { get; set; }
 	public int Point { get; set; }
+}
+
+public enum UserTags {
+	Admin = 100,
+	User = 101,
+	Teacher = 102
 }
