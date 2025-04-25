@@ -1,6 +1,7 @@
 using AspNetTutorial;
 using AspNetTutorial.Dtos;
 using AspNetTutorial.Entities;
+using AspNetTutorial.Middlewares;
 using AspNetTutorial.Routes;
 using AspNetTutorial.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -34,9 +35,17 @@ builder.Services.AddSwaggerGen(c => {
 		Type = SecuritySchemeType.ApiKey,
 		Scheme = "Bearer"
 	});
+	c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme {
+		Description = "Api Key is Required",
+		Name = "X-API-Key",
+		In = ParameterLocation.Header,
+		Type = SecuritySchemeType.ApiKey,
+		Scheme = "ApiKey"
+	});
 
 	c.AddSecurityRequirement(new OpenApiSecurityRequirement {
 		{ new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() },
+		{ new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" } }, Array.Empty<string>() },
 	});
 });
 
@@ -74,6 +83,7 @@ builder.Services.AddAuthentication(options => {
 builder.Services.AddAuthorization();
 
 WebApplication app = builder.Build();
+app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment()) {
 	app.UseSwagger();
@@ -82,7 +92,10 @@ if (app.Environment.IsDevelopment()) {
 	app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
+app.UseMiddleware<Base64EncodeMiddleware>();
+app.UseMiddleware<Base64DecodeMiddleware>();
+app.UseMiddleware<ApiKeyMiddleware>();
+
 
 app.MapUserRoutes("User");
 app.MapClassRoutes("Class");
